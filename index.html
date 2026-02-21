@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -21,788 +20,785 @@
     --pixel: 4px;
   }
 
-- { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-background: var(–bg);
-color: var(–text);
-font-family: ‘VT323’, monospace;
-font-size: 20px;
-overflow-x: hidden;
-image-rendering: pixelated;
-}
-
-/* Scanlines overlay */
-body::after {
-content: ‘’;
-position: fixed;
-inset: 0;
-background: repeating-linear-gradient(
-0deg,
-transparent,
-transparent 2px,
-rgba(0,0,0,0.08) 2px,
-rgba(0,0,0,0.08) 4px
-);
-pointer-events: none;
-z-index: 9999;
-}
-
-/* Stars background */
-.stars {
-position: fixed;
-inset: 0;
-z-index: 0;
-overflow: hidden;
-}
-.star {
-position: absolute;
-background: white;
-width: 2px;
-height: 2px;
-animation: twinkle var(–t) infinite ease-in-out;
-}
-@keyframes twinkle {
-0%,100% { opacity: 0.1; }
-50% { opacity: 1; }
-}
-
-/* ===== TITLE SCREEN ===== */
-#title-screen {
-position: fixed;
-inset: 0;
-z-index: 100;
-background: var(–bg);
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 2rem;
-transition: opacity 0.8s ease, visibility 0.8s;
-}
-#title-screen.hidden {
-opacity: 0;
-visibility: hidden;
-pointer-events: none;
-}
-
-.game-logo {
-font-family: ‘Press Start 2P’, monospace;
-font-size: clamp(0.8rem, 3vw, 1.5rem);
-color: var(–accent);
-text-align: center;
-line-height: 2;
-text-shadow: 4px 4px 0 #aa8800, 8px 8px 0 #554400;
-animation: logoFloat 3s ease-in-out infinite;
-}
-@keyframes logoFloat {
-0%,100% { transform: translateY(0); }
-50% { transform: translateY(-8px); }
-}
-
-.game-subtitle {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.6rem;
-color: var(–accent2);
-letter-spacing: 0.2em;
-}
-
-.pixel-hero {
-font-size: 5rem;
-animation: heroFloat 2s ease-in-out infinite;
-filter: drop-shadow(0 0 20px var(–accent));
-}
-@keyframes heroFloat {
-0%,100% { transform: translateY(0) rotate(-2deg); }
-50% { transform: translateY(-10px) rotate(2deg); }
-}
-
-.press-start {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.7rem;
-color: var(–green);
-animation: blink 1s step-end infinite;
-cursor: pointer;
-padding: 1rem 2rem;
-border: 4px solid var(–green);
-background: transparent;
-transition: background 0.1s;
-}
-.press-start:hover { background: rgba(57,255,20,0.1); }
-@keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
-
-.title-version {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-color: var(–muted);
-}
-
-/* ===== MAIN GAME UI ===== */
-#game-ui {
-position: relative;
-z-index: 1;
-min-height: 100vh;
-display: none;
-}
-#game-ui.active { display: block; }
-
-/* HUD Top Bar */
-.hud {
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-z-index: 50;
-background: var(–surface);
-border-bottom: 4px solid var(–border);
-padding: 0.8rem 1.5rem;
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 1rem;
-flex-wrap: wrap;
-}
-
-.hud-player {
-display: flex;
-align-items: center;
-gap: 1rem;
-}
-
-.player-avatar {
-font-size: 2rem;
-border: 3px solid var(–accent);
-padding: 0.2rem 0.4rem;
-background: var(–panel);
-box-shadow: 0 0 10px var(–accent);
-}
-
-.player-info {
-display: flex;
-flex-direction: column;
-gap: 0.3rem;
-}
-
-.player-name {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.55rem;
-color: var(–accent);
-}
-
-.player-class {
-font-size: 0.85rem;
-color: var(–muted);
-}
-
-.stat-bar {
-display: flex;
-align-items: center;
-gap: 0.5rem;
-font-size: 0.85rem;
-}
-
-.stat-label {
-color: var(–muted);
-font-size: 0.75rem;
-min-width: 30px;
-}
-
-.bar-track {
-width: 100px;
-height: 12px;
-background: #111;
-border: 2px solid var(–border);
-position: relative;
-overflow: hidden;
-}
-
-.bar-fill {
-height: 100%;
-position: relative;
-transition: width 1s ease;
-}
-.bar-fill.hp { background: var(–accent3); width: 88%; }
-.bar-fill.mp { background: var(–accent2); width: 95%; }
-.bar-fill.xp { background: var(–green); width: 72%; }
-
-.bar-fill::after {
-content: ‘’;
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 40%;
-background: rgba(255,255,255,0.2);
-}
-
-.hud-nav {
-display: flex;
-gap: 0.5rem;
-flex-wrap: wrap;
-}
-
-.nav-btn {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-padding: 0.5rem 0.8rem;
-background: var(–panel);
-border: 3px solid var(–border);
-color: var(–text);
-cursor: pointer;
-transition: all 0.1s;
-text-decoration: none;
-}
-.nav-btn:hover, .nav-btn.active {
-background: var(–accent);
-color: var(–bg);
-border-color: var(–accent);
-box-shadow: 4px 4px 0 #aa8800;
-transform: translate(-2px, -2px);
-}
-
-.hud-level {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.5rem;
-color: var(–accent);
-text-align: center;
-}
-
-/* ===== WORLD MAP / MAIN CONTENT ===== */
-.game-world {
-padding-top: 100px;
-}
-
-/* ===== INTRO ZONE ===== */
-.zone {
-min-height: 100vh;
-padding: 3rem 2rem;
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-}
-
-.zone-title-bar {
-position: absolute;
-top: 100px;
-left: 50%;
-transform: translateX(-50%);
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.6rem;
-background: var(–accent);
-color: var(–bg);
-padding: 0.4rem 1rem;
-white-space: nowrap;
-z-index: 5;
-}
-
-/* Dialogue box */
-.dialogue-box {
-background: var(–surface);
-border: 4px solid var(–accent);
-padding: 2rem;
-max-width: 700px;
-width: 100%;
-position: relative;
-box-shadow: 8px 8px 0 var(–border);
-}
-
-.dialogue-box::before {
-content: ‘▶ NARRATOR’;
-position: absolute;
-top: -1.2rem;
-left: 1rem;
-background: var(–accent);
-color: var(–bg);
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.45rem;
-padding: 0.2rem 0.5rem;
-}
-
-.dialogue-text {
-font-size: 1.1rem;
-line-height: 1.8;
-color: var(–text);
-margin-bottom: 1.5rem;
-}
-
-.dialogue-text .highlight { color: var(–accent2); }
-.dialogue-text .name { color: var(–accent); font-family: ‘Press Start 2P’, monospace; font-size: 0.8rem; }
-
-.dialogue-choices {
-display: flex;
-flex-direction: column;
-gap: 0.5rem;
-}
-
-.choice-btn {
-font-family: ‘VT323’, monospace;
-font-size: 1.2rem;
-padding: 0.5rem 1rem;
-background: transparent;
-border: 2px solid var(–border);
-color: var(–muted);
-cursor: pointer;
-text-align: left;
-transition: all 0.1s;
-position: relative;
-}
-.choice-btn::before { content: ’> ’; color: var(–accent); opacity: 0; }
-.choice-btn:hover {
-background: var(–panel);
-border-color: var(–accent2);
-color: var(–accent2);
-padding-left: 1.5rem;
-}
-.choice-btn:hover::before { opacity: 1; }
-
-/* ===== CHARACTER SHEET (About) ===== */
-#about {
-background: radial-gradient(ellipse at 50% 50%, #1a1a35 0%, var(–bg) 70%);
-}
-
-.char-sheet {
-background: var(–surface);
-border: 4px solid var(–border);
-padding: 2rem;
-max-width: 800px;
-width: 100%;
-box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
-display: grid;
-grid-template-columns: 1fr 2fr;
-gap: 2rem;
-}
-
-.char-portrait {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 1rem;
-}
-
-.portrait-frame {
-width: 120px;
-height: 120px;
-border: 4px solid var(–accent);
-background: var(–panel);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 4rem;
-box-shadow: inset 0 0 20px rgba(255,221,0,0.2), 0 0 20px rgba(255,221,0,0.3);
-animation: portraitGlow 3s ease-in-out infinite;
-}
-@keyframes portraitGlow {
-0%,100% { box-shadow: inset 0 0 20px rgba(255,221,0,0.2), 0 0 20px rgba(255,221,0,0.3); }
-50% { box-shadow: inset 0 0 30px rgba(255,221,0,0.4), 0 0 40px rgba(255,221,0,0.5); }
-}
-
-.char-class-badge {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-background: var(–accent2);
-color: var(–bg);
-padding: 0.3rem 0.6rem;
-text-align: center;
-}
-
-.char-level-badge {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.5rem;
-color: var(–accent);
-border: 2px solid var(–accent);
-padding: 0.3rem 0.6rem;
-}
-
-.char-stats {
-display: flex;
-flex-direction: column;
-gap: 1.2rem;
-}
-
-.char-name-big {
-font-family: ‘Press Start 2P’, monospace;
-font-size: clamp(0.5rem, 2vw, 0.9rem);
-color: var(–accent);
-margin-bottom: 0.3rem;
-}
-
-.char-bio {
-font-size: 1rem;
-color: var(–muted);
-line-height: 1.7;
-border-top: 2px solid var(–border);
-padding-top: 1rem;
-}
-
-.stat-row {
-display: flex;
-align-items: center;
-gap: 1rem;
-font-size: 1rem;
-}
-
-.stat-name {
-color: var(–muted);
-font-size: 0.85rem;
-min-width: 120px;
-}
-
-.stat-value {
-color: var(–accent2);
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.5rem;
-}
-
-.stat-dots {
-display: flex;
-gap: 4px;
-}
-
-.dot {
-width: 10px;
-height: 10px;
-background: var(–border);
-border: 2px solid var(–muted);
-}
-.dot.filled {
-background: var(–accent);
-border-color: var(–accent);
-box-shadow: 0 0 5px var(–accent);
-}
-
-/* ===== SKILL TREE ===== */
-#skills {
-background: radial-gradient(ellipse at 30% 50%, #1a0d35 0%, var(–bg) 60%);
-}
-
-.skill-tree {
-max-width: 900px;
-width: 100%;
-}
-
-.tree-title {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.8rem;
-color: var(–accent);
-text-align: center;
-margin-bottom: 3rem;
-text-shadow: 0 0 10px var(–accent);
-}
-
-.skill-branches {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-gap: 1.5rem;
-}
-
-.skill-branch {
-background: var(–surface);
-border: 3px solid var(–border);
-padding: 1.5rem;
-position: relative;
-transition: all 0.2s;
-opacity: 0;
-transform: translateY(20px);
-transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.2s, box-shadow 0.2s;
-}
-.skill-branch.visible {
-opacity: 1;
-transform: translateY(0);
-}
-.skill-branch:hover {
-border-color: var(–accent2);
-box-shadow: 0 0 20px rgba(0,221,255,0.2), 6px 6px 0 var(–border);
-transform: translate(-3px, -3px);
-}
-
-.branch-icon {
-font-size: 2.5rem;
-margin-bottom: 0.5rem;
-display: block;
-}
-
-.branch-name {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.45rem;
-color: var(–accent);
-margin-bottom: 0.8rem;
-}
-
-.skill-list {
-display: flex;
-flex-direction: column;
-gap: 0.4rem;
-}
-
-.skill-item {
-display: flex;
-align-items: center;
-gap: 0.5rem;
-font-size: 1rem;
-color: var(–text);
-}
-
-.skill-item::before {
-content: ‘★’;
-color: var(–accent);
-font-size: 0.8rem;
-}
-
-.skill-item.locked {
-color: var(–muted);
-opacity: 0.5;
-}
-.skill-item.locked::before { content: ‘☆’; color: var(–muted); }
-
-/* ===== QUEST LOG (Projects) ===== */
-#projects {
-background: radial-gradient(ellipse at 70% 50%, #1a1a0d 0%, var(–bg) 60%);
-}
-
-.quest-log {
-max-width: 900px;
-width: 100%;
-}
-
-.quest-log-header {
-background: var(–surface);
-border: 4px solid var(–accent);
-padding: 0.8rem 1.5rem;
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.6rem;
-color: var(–accent);
-margin-bottom: 1.5rem;
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-
-.quest-count {
-background: var(–accent);
-color: var(–bg);
-padding: 0.2rem 0.5rem;
-font-size: 0.5rem;
-}
-
-.quest-item {
-background: var(–surface);
-border: 3px solid var(–border);
-margin-bottom: 1rem;
-overflow: hidden;
-opacity: 0;
-transform: translateX(-20px);
-transition: opacity 0.5s ease, transform 0.5s ease;
-cursor: pointer;
-}
-.quest-item.visible {
-opacity: 1;
-transform: translateX(0);
-}
-.quest-item:hover { border-color: var(–accent); }
-
-.quest-header {
-display: flex;
-align-items: center;
-gap: 1rem;
-padding: 1rem 1.5rem;
-background: var(–panel);
-border-bottom: 2px solid var(–border);
-}
-
-.quest-status {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-padding: 0.3rem 0.5rem;
-}
-.quest-status.complete { background: var(–green); color: #000; }
-.quest-status.active { background: var(–accent); color: #000; }
-.quest-status.side { background: var(–accent2); color: #000; }
-
-.quest-name {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.5rem;
-color: var(–accent);
-flex: 1;
-}
-
-.quest-reward {
-font-size: 0.9rem;
-color: var(–accent);
-}
-
-.quest-body {
-padding: 1rem 1.5rem;
-}
-
-.quest-desc {
-font-size: 1rem;
-color: var(–muted);
-line-height: 1.7;
-margin-bottom: 1rem;
-}
-
-.quest-tags {
-display: flex;
-flex-wrap: wrap;
-gap: 0.5rem;
-}
-
-.q-tag {
-font-size: 0.8rem;
-padding: 0.2rem 0.6rem;
-border: 2px solid var(–border);
-color: var(–accent2);
-}
-
-/* ===== CONTACT / INN ===== */
-#contact {
-background: radial-gradient(ellipse at 50% 80%, #1a0d0d 0%, var(–bg) 60%);
-}
-
-.inn-scene {
-max-width: 700px;
-width: 100%;
-text-align: center;
-}
-
-.inn-sign {
-font-family: ‘Press Start 2P’, monospace;
-font-size: clamp(0.5rem, 2vw, 0.9rem);
-color: var(–accent);
-background: var(–surface);
-border: 4px solid var(–accent);
-padding: 1rem 2rem;
-margin-bottom: 2rem;
-display: inline-block;
-box-shadow: 8px 8px 0 #aa8800;
-text-shadow: 2px 2px 0 #554400;
-}
-
-.innkeeper-box {
-background: var(–surface);
-border: 4px solid var(–border);
-padding: 2rem;
-margin-bottom: 2rem;
-position: relative;
-text-align: left;
-box-shadow: 6px 6px 0 var(–border);
-}
-
-.innkeeper-box::before {
-content: ‘🏨 INNKEEPER SAYS:’;
-position: absolute;
-top: -1.2rem;
-left: 1rem;
-background: var(–accent3);
-color: white;
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-padding: 0.2rem 0.5rem;
-}
-
-.innkeeper-text {
-font-size: 1.1rem;
-line-height: 1.8;
-color: var(–text);
-}
-
-.contact-options {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-gap: 1rem;
-margin-top: 2rem;
-}
-
-.contact-opt {
-background: var(–panel);
-border: 3px solid var(–border);
-padding: 1.2rem;
-text-align: center;
-cursor: pointer;
-text-decoration: none;
-transition: all 0.1s;
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 0.5rem;
-}
-.contact-opt:hover {
-border-color: var(–accent);
-background: var(–surface);
-transform: translate(-3px, -3px);
-box-shadow: 3px 3px 0 var(–border);
-}
-
-.contact-opt-icon { font-size: 2rem; }
-
-.contact-opt-label {
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-color: var(–accent);
-}
-
-.contact-opt-sub {
-font-size: 0.85rem;
-color: var(–muted);
-}
-
-/* Footer */
-.game-footer {
-background: var(–surface);
-border-top: 4px solid var(–border);
-padding: 1rem 2rem;
-text-align: center;
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-color: var(–muted);
-}
-
-/* Notification toast */
-.toast {
-position: fixed;
-bottom: 2rem;
-right: 2rem;
-background: var(–surface);
-border: 3px solid var(–green);
-padding: 1rem 1.5rem;
-font-family: ‘Press Start 2P’, monospace;
-font-size: 0.4rem;
-color: var(–green);
-z-index: 200;
-opacity: 0;
-transform: translateY(20px);
-transition: all 0.3s;
-max-width: 280px;
-box-shadow: 4px 4px 0 var(–border);
-}
-.toast.show {
-opacity: 1;
-transform: translateY(0);
-}
-.toast-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
-
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* Responsive */
-@media (max-width: 600px) {
-.char-sheet { grid-template-columns: 1fr; }
-.hud { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-.bar-track { width: 70px; }
-.game-world { padding-top: 140px; }
-}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    overflow-x: hidden;
+    image-rendering: pixelated;
+  }
+
+  /* Scanlines overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    width: 2px;
+    height: 2px;
+    animation: twinkle var(--t) infinite ease-in-out;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0.1; }
+    50% { opacity: 1; }
+  }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    transition: opacity 0.8s ease, visibility 0.8s;
+  }
+  #title-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .game-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.8rem, 3vw, 1.5rem);
+    color: var(--accent);
+    text-align: center;
+    line-height: 2;
+    text-shadow: 4px 4px 0 #aa8800, 8px 8px 0 #554400;
+    animation: logoFloat 3s ease-in-out infinite;
+  }
+  @keyframes logoFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .game-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+  }
+
+  .pixel-hero {
+    font-size: 5rem;
+    animation: heroFloat 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px var(--accent));
+  }
+  @keyframes heroFloat {
+    0%,100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+
+  .press-start {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: var(--green);
+    animation: blink 1s step-end infinite;
+    cursor: pointer;
+    padding: 1rem 2rem;
+    border: 4px solid var(--green);
+    background: transparent;
+    transition: background 0.1s;
+  }
+  .press-start:hover { background: rgba(57,255,20,0.1); }
+  @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+
+  .title-version {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    color: var(--muted);
+  }
+
+  /* ===== MAIN GAME UI ===== */
+  #game-ui {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: none;
+  }
+  #game-ui.active { display: block; }
+
+  /* HUD Top Bar */
+  .hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--surface);
+    border-bottom: 4px solid var(--border);
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .hud-player {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .player-avatar {
+    font-size: 2rem;
+    border: 3px solid var(--accent);
+    padding: 0.2rem 0.4rem;
+    background: var(--panel);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .player-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    color: var(--accent);
+  }
+
+  .player-class {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .stat-label {
+    color: var(--muted);
+    font-size: 0.75rem;
+    min-width: 30px;
+  }
+
+  .bar-track {
+    width: 100px;
+    height: 12px;
+    background: #111;
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    position: relative;
+    transition: width 1s ease;
+  }
+  .bar-fill.hp { background: var(--accent3); width: 88%; }
+  .bar-fill.mp { background: var(--accent2); width: 95%; }
+  .bar-fill.xp { background: var(--green); width: 72%; }
+
+  .bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .hud-nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    padding: 0.5rem 0.8rem;
+    background: var(--panel);
+    border: 3px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.1s;
+    text-decoration: none;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    box-shadow: 4px 4px 0 #aa8800;
+    transform: translate(-2px, -2px);
+  }
+
+  .hud-level {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    color: var(--accent);
+    text-align: center;
+  }
+
+  /* ===== WORLD MAP / MAIN CONTENT ===== */
+  .game-world {
+    padding-top: 100px;
+  }
+
+  /* ===== INTRO ZONE ===== */
+  .zone {
+    min-height: 100vh;
+    padding: 3rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .zone-title-bar {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.4rem 1rem;
+    white-space: nowrap;
+    z-index: 5;
+  }
+
+  /* Dialogue box */
+  .dialogue-box {
+    background: var(--surface);
+    border: 4px solid var(--accent);
+    padding: 2rem;
+    max-width: 700px;
+    width: 100%;
+    position: relative;
+    box-shadow: 8px 8px 0 var(--border);
+  }
+
+  .dialogue-box::before {
+    content: '▶ NARRATOR';
+    position: absolute;
+    top: -1.2rem;
+    left: 1rem;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .dialogue-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  .dialogue-text .highlight { color: var(--accent2); }
+  .dialogue-text .name { color: var(--accent); font-family: 'Press Start 2P', monospace; font-size: 0.8rem; }
+
+  .dialogue-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .choice-btn {
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.1s;
+    position: relative;
+  }
+  .choice-btn::before { content: '> '; color: var(--accent); opacity: 0; }
+  .choice-btn:hover {
+    background: var(--panel);
+    border-color: var(--accent2);
+    color: var(--accent2);
+    padding-left: 1.5rem;
+  }
+  .choice-btn:hover::before { opacity: 1; }
+
+  /* ===== CHARACTER SHEET (About) ===== */
+  #about {
+    background: radial-gradient(ellipse at 50% 50%, #1a1a35 0%, var(--bg) 70%);
+  }
+
+  .char-sheet {
+    background: var(--surface);
+    border: 4px solid var(--border);
+    padding: 2rem;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+  }
+
+  .char-portrait {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .portrait-frame {
+    width: 120px;
+    height: 120px;
+    border: 4px solid var(--accent);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    box-shadow: inset 0 0 20px rgba(255,221,0,0.2), 0 0 20px rgba(255,221,0,0.3);
+    animation: portraitGlow 3s ease-in-out infinite;
+  }
+  @keyframes portraitGlow {
+    0%,100% { box-shadow: inset 0 0 20px rgba(255,221,0,0.2), 0 0 20px rgba(255,221,0,0.3); }
+    50% { box-shadow: inset 0 0 30px rgba(255,221,0,0.4), 0 0 40px rgba(255,221,0,0.5); }
+  }
+
+  .char-class-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    background: var(--accent2);
+    color: var(--bg);
+    padding: 0.3rem 0.6rem;
+    text-align: center;
+  }
+
+  .char-level-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    padding: 0.3rem 0.6rem;
+  }
+
+  .char-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .char-name-big {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.5rem, 2vw, 0.9rem);
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .char-bio {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.7;
+    border-top: 2px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+  }
+
+  .stat-name {
+    color: var(--muted);
+    font-size: 0.85rem;
+    min-width: 120px;
+  }
+
+  .stat-value {
+    color: var(--accent2);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+  }
+
+  .stat-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    background: var(--border);
+    border: 2px solid var(--muted);
+  }
+  .dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 5px var(--accent);
+  }
+
+  /* ===== SKILL TREE ===== */
+  #skills {
+    background: radial-gradient(ellipse at 30% 50%, #1a0d35 0%, var(--bg) 60%);
+  }
+
+  .skill-tree {
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .tree-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 3rem;
+    text-shadow: 0 0 10px var(--accent);
+  }
+
+  .skill-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .skill-branch {
+    background: var(--surface);
+    border: 3px solid var(--border);
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.2s;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.2s, box-shadow 0.2s;
+  }
+  .skill-branch.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .skill-branch:hover {
+    border-color: var(--accent2);
+    box-shadow: 0 0 20px rgba(0,221,255,0.2), 6px 6px 0 var(--border);
+    transform: translate(-3px, -3px);
+  }
+
+  .branch-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .branch-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+  }
+
+  .skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .skill-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: var(--text);
+  }
+
+  .skill-item::before {
+    content: '★';
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+
+  .skill-item.locked {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+  .skill-item.locked::before { content: '☆'; color: var(--muted); }
+
+  /* ===== QUEST LOG (Projects) ===== */
+  #projects {
+    background: radial-gradient(ellipse at 70% 50%, #1a1a0d 0%, var(--bg) 60%);
+  }
+
+  .quest-log {
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .quest-log-header {
+    background: var(--surface);
+    border: 4px solid var(--accent);
+    padding: 0.8rem 1.5rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .quest-count {
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0.2rem 0.5rem;
+    font-size: 0.5rem;
+  }
+
+  .quest-item {
+    background: var(--surface);
+    border: 3px solid var(--border);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    cursor: pointer;
+  }
+  .quest-item.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .quest-item:hover { border-color: var(--accent); }
+
+  .quest-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: var(--panel);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .quest-status {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    padding: 0.3rem 0.5rem;
+  }
+  .quest-status.complete { background: var(--green); color: #000; }
+  .quest-status.active { background: var(--accent); color: #000; }
+  .quest-status.side { background: var(--accent2); color: #000; }
+
+  .quest-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    color: var(--accent);
+    flex: 1;
+  }
+
+  .quest-reward {
+    font-size: 0.9rem;
+    color: var(--accent);
+  }
+
+  .quest-body {
+    padding: 1rem 1.5rem;
+  }
+
+  .quest-desc {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .quest-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .q-tag {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    border: 2px solid var(--border);
+    color: var(--accent2);
+  }
+
+  /* ===== CONTACT / INN ===== */
+  #contact {
+    background: radial-gradient(ellipse at 50% 80%, #1a0d0d 0%, var(--bg) 60%);
+  }
+
+  .inn-scene {
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .inn-sign {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.5rem, 2vw, 0.9rem);
+    color: var(--accent);
+    background: var(--surface);
+    border: 4px solid var(--accent);
+    padding: 1rem 2rem;
+    margin-bottom: 2rem;
+    display: inline-block;
+    box-shadow: 8px 8px 0 #aa8800;
+    text-shadow: 2px 2px 0 #554400;
+  }
+
+  .innkeeper-box {
+    background: var(--surface);
+    border: 4px solid var(--border);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    text-align: left;
+    box-shadow: 6px 6px 0 var(--border);
+  }
+
+  .innkeeper-box::before {
+    content: '🏨 INNKEEPER SAYS:';
+    position: absolute;
+    top: -1.2rem;
+    left: 1rem;
+    background: var(--accent3);
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .innkeeper-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .contact-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .contact-opt {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    padding: 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .contact-opt:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+    transform: translate(-3px, -3px);
+    box-shadow: 3px 3px 0 var(--border);
+  }
+
+  .contact-opt-icon { font-size: 2rem; }
+
+  .contact-opt-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    color: var(--accent);
+  }
+
+  .contact-opt-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  /* Footer */
+  .game-footer {
+    background: var(--surface);
+    border-top: 4px solid var(--border);
+    padding: 1rem 2rem;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    color: var(--muted);
+  }
+
+  /* Notification toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--surface);
+    border: 3px solid var(--green);
+    padding: 1rem 1.5rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    color: var(--green);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    max-width: 280px;
+    box-shadow: 4px 4px 0 var(--border);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .char-sheet { grid-template-columns: 1fr; }
+    .hud { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .bar-track { width: 70px; }
+    .game-world { padding-top: 140px; }
+  }
 </style>
-
 </head>
 <body>
 
 <!-- Stars -->
-
 <div class="stars" id="stars"></div>
 
 <!-- TITLE SCREEN -->
-
 <div id="title-screen">
   <div class="game-logo">KURT XIERICK<br>BAUTISTA</div>
   <div class="game-subtitle">Developer Chronicles</div>
@@ -812,11 +808,9 @@ transform: translateY(0);
 </div>
 
 <!-- GAME UI -->
-
 <div id="game-ui">
 
   <!-- HUD -->
-
   <div class="hud">
     <div class="hud-player">
       <div class="player-avatar">🧙‍♂️</div>
@@ -826,298 +820,291 @@ transform: translateY(0);
       </div>
     </div>
 
-```
-<div style="display:flex; flex-direction:column; gap:0.4rem;">
-  <div class="stat-bar">
-    <span class="stat-label">HP</span>
-    <div class="bar-track"><div class="bar-fill hp"></div></div>
-    <span style="font-size:0.8rem; color:var(--accent3)">88/100</span>
-  </div>
-  <div class="stat-bar">
-    <span class="stat-label">MP</span>
-    <div class="bar-track"><div class="bar-fill mp"></div></div>
-    <span style="font-size:0.8rem; color:var(--accent2)">95/100</span>
-  </div>
-  <div class="stat-bar">
-    <span class="stat-label">XP</span>
-    <div class="bar-track"><div class="bar-fill xp"></div></div>
-    <span style="font-size:0.8rem; color:var(--green)">72%</span>
-  </div>
-</div>
+    <div style="display:flex; flex-direction:column; gap:0.4rem;">
+      <div class="stat-bar">
+        <span class="stat-label">HP</span>
+        <div class="bar-track"><div class="bar-fill hp"></div></div>
+        <span style="font-size:0.8rem; color:var(--accent3)">88/100</span>
+      </div>
+      <div class="stat-bar">
+        <span class="stat-label">MP</span>
+        <div class="bar-track"><div class="bar-fill mp"></div></div>
+        <span style="font-size:0.8rem; color:var(--accent2)">95/100</span>
+      </div>
+      <div class="stat-bar">
+        <span class="stat-label">XP</span>
+        <div class="bar-track"><div class="bar-fill xp"></div></div>
+        <span style="font-size:0.8rem; color:var(--green)">72%</span>
+      </div>
+    </div>
 
-<div class="hud-level">
-  <div>LVL</div>
-  <div style="font-size:1.2rem; color:var(--accent)">12</div>
-</div>
+    <div class="hud-level">
+      <div>LVL</div>
+      <div style="font-size:1.2rem; color:var(--accent)">12</div>
+    </div>
 
-<div class="hud-nav">
-  <a href="#about" class="nav-btn">📜 ABOUT</a>
-  <a href="#skills" class="nav-btn">⚔️ SKILLS</a>
-  <a href="#projects" class="nav-btn">📋 QUESTS</a>
-  <a href="#contact" class="nav-btn">🏨 INN</a>
-</div>
-```
-
+    <div class="hud-nav">
+      <a href="#about" class="nav-btn">📜 ABOUT</a>
+      <a href="#skills" class="nav-btn">⚔️ SKILLS</a>
+      <a href="#projects" class="nav-btn">📋 QUESTS</a>
+      <a href="#contact" class="nav-btn">🏨 INN</a>
+    </div>
   </div>
 
   <div class="game-world">
 
-```
-<!-- INTRO ZONE -->
-<div class="zone" id="intro" style="background: radial-gradient(ellipse at 50% 50%, #0d1a0d 0%, var(--bg) 60%);">
-  <div class="zone-title-bar">⚔ SPAWN ZONE — THE BEGINNING ⚔</div>
-  <div class="dialogue-box">
-    <div class="dialogue-text">
-      Welcome, adventurer! You have entered the realm of
-      <span class="name"> KURT XIERICK BAUTISTA</span> — a legendary
-      <span class="highlight">Full Stack Developer</span> who wanders the digital lands,
-      building powerful applications and slaying bugs wherever they lurk.<br><br>
-      This hero has mastered the ancient arts of <span class="highlight">JavaScript, React, and Node.js</span>,
-      and continues to grow stronger with every project.
-    </div>
-    <div class="dialogue-choices">
-      <button class="choice-btn" onclick="scrollTo('#about')">📜 View Character Sheet</button>
-      <button class="choice-btn" onclick="scrollTo('#skills')">⚔️ Browse Skill Tree</button>
-      <button class="choice-btn" onclick="scrollTo('#projects')">📋 Open Quest Log</button>
-      <button class="choice-btn" onclick="scrollTo('#contact')">🏨 Visit the Inn</button>
-    </div>
-  </div>
-</div>
-
-<!-- CHARACTER SHEET -->
-<div class="zone" id="about" style="background: radial-gradient(ellipse at 50% 50%, #1a1a35 0%, var(--bg) 70%);">
-  <div class="zone-title-bar">📜 CHARACTER SHEET</div>
-  <div class="char-sheet">
-    <div class="char-portrait">
-      <div class="portrait-frame">🧙‍♂️</div>
-      <div class="char-class-badge">FULL STACK<br>DEVELOPER</div>
-      <div class="char-level-badge">LVL 12</div>
-    </div>
-
-    <div class="char-stats">
-      <div>
-        <div class="char-name-big">KURT XIERICK BAUTISTA</div>
-        <div class="char-bio">
-          A passionate developer on a mission to craft powerful, meaningful digital experiences. With a love for clean code and creative problem-solving, this hero combines technical mastery with relentless curiosity.
+    <!-- INTRO ZONE -->
+    <div class="zone" id="intro" style="background: radial-gradient(ellipse at 50% 50%, #0d1a0d 0%, var(--bg) 60%);">
+      <div class="zone-title-bar">⚔ SPAWN ZONE — THE BEGINNING ⚔</div>
+      <div class="dialogue-box">
+        <div class="dialogue-text">
+          Welcome, adventurer! You have entered the realm of
+          <span class="name"> KURT XIERICK BAUTISTA</span> — a legendary
+          <span class="highlight">Full Stack Developer</span> who wanders the digital lands,
+          building powerful applications and slaying bugs wherever they lurk.<br><br>
+          This hero has mastered the ancient arts of <span class="highlight">JavaScript, React, and Node.js</span>,
+          and continues to grow stronger with every project.
         </div>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-name">CREATIVITY</span>
-        <div class="stat-dots">
-          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
-          <div class="dot filled"></div><div class="dot filled"></div>
-        </div>
-        <span class="stat-value">MAX</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-name">PROBLEM SOLVING</span>
-        <div class="stat-dots">
-          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
-          <div class="dot filled"></div><div class="dot filled"></div>
-        </div>
-        <span class="stat-value">MAX</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-name">TEAMWORK</span>
-        <div class="stat-dots">
-          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
-          <div class="dot filled"></div><div class="dot"></div>
-        </div>
-        <span class="stat-value">90</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-name">SPEED</span>
-        <div class="stat-dots">
-          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
-          <div class="dot filled"></div><div class="dot"></div>
-        </div>
-        <span class="stat-value">88</span>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-name">ENDURANCE</span>
-        <div class="stat-dots">
-          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
-          <div class="dot filled"></div><div class="dot filled"></div>
-        </div>
-        <span class="stat-value">MAX</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SKILL TREE -->
-<div class="zone" id="skills" style="background: radial-gradient(ellipse at 30% 50%, #1a0d35 0%, var(--bg) 60%);">
-  <div class="zone-title-bar">⚔️ SKILL TREE</div>
-  <div class="skill-tree">
-    <div class="tree-title">✦ UNLOCKED ABILITIES ✦</div>
-    <div class="skill-branches">
-
-      <div class="skill-branch">
-        <span class="branch-icon">⚡</span>
-        <div class="branch-name">FRONTEND</div>
-        <div class="skill-list">
-          <div class="skill-item">JavaScript</div>
-          <div class="skill-item">React.js</div>
-          <div class="skill-item">HTML & CSS</div>
-          <div class="skill-item">Tailwind CSS</div>
-          <div class="skill-item locked">Three.js</div>
-        </div>
-      </div>
-
-      <div class="skill-branch">
-        <span class="branch-icon">🛡️</span>
-        <div class="branch-name">BACKEND</div>
-        <div class="skill-list">
-          <div class="skill-item">Node.js</div>
-          <div class="skill-item">Express.js</div>
-          <div class="skill-item">REST APIs</div>
-          <div class="skill-item locked">GraphQL</div>
-          <div class="skill-item locked">gRPC</div>
-        </div>
-      </div>
-
-      <div class="skill-branch">
-        <span class="branch-icon">🗄️</span>
-        <div class="branch-name">DATABASE</div>
-        <div class="skill-list">
-          <div class="skill-item">PostgreSQL</div>
-          <div class="skill-item">MongoDB</div>
-          <div class="skill-item">MySQL</div>
-          <div class="skill-item locked">Redis</div>
-          <div class="skill-item locked">Cassandra</div>
-        </div>
-      </div>
-
-      <div class="skill-branch">
-        <span class="branch-icon">🔧</span>
-        <div class="branch-name">DEVOPS</div>
-        <div class="skill-list">
-          <div class="skill-item">Git & GitHub</div>
-          <div class="skill-item">Docker</div>
-          <div class="skill-item">TypeScript</div>
-          <div class="skill-item locked">Kubernetes</div>
-          <div class="skill-item locked">AWS</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- QUEST LOG -->
-<div class="zone" id="projects" style="background: radial-gradient(ellipse at 70% 50%, #1a1a0d 0%, var(--bg) 60%);">
-  <div class="zone-title-bar">📋 QUEST LOG</div>
-  <div class="quest-log">
-    <div class="quest-log-header">
-      <span>COMPLETED & ACTIVE QUESTS</span>
-      <span class="quest-count">3 QUESTS</span>
-    </div>
-
-    <div class="quest-item">
-      <div class="quest-header">
-        <span class="quest-status complete">✓ COMPLETE</span>
-        <span class="quest-name">QUEST: THE WEB APP</span>
-        <span class="quest-reward">+500 XP 💰</span>
-      </div>
-      <div class="quest-body">
-        <div class="quest-desc">Built a full-stack web application with user authentication, real-time data updates, and a clean intuitive interface. Defeated the Null Pointer Dragon and survived the CSS Dungeon.</div>
-        <div class="quest-tags">
-          <span class="q-tag">React</span>
-          <span class="q-tag">Node.js</span>
-          <span class="q-tag">PostgreSQL</span>
-          <span class="q-tag">JWT Auth</span>
+        <div class="dialogue-choices">
+          <button class="choice-btn" onclick="scrollTo('#about')">📜 View Character Sheet</button>
+          <button class="choice-btn" onclick="scrollTo('#skills')">⚔️ Browse Skill Tree</button>
+          <button class="choice-btn" onclick="scrollTo('#projects')">📋 Open Quest Log</button>
+          <button class="choice-btn" onclick="scrollTo('#contact')">🏨 Visit the Inn</button>
         </div>
       </div>
     </div>
 
-    <div class="quest-item">
-      <div class="quest-header">
-        <span class="quest-status active">⚡ ACTIVE</span>
-        <span class="quest-name">QUEST: THE API FORGE</span>
-        <span class="quest-reward">+350 XP 💰</span>
-      </div>
-      <div class="quest-body">
-        <div class="quest-desc">Forging a powerful REST API connecting multiple realms (services). Focused on performance, security enchantments, and a legendary tome of documentation.</div>
-        <div class="quest-tags">
-          <span class="q-tag">Express</span>
-          <span class="q-tag">TypeScript</span>
-          <span class="q-tag">REST API</span>
-          <span class="q-tag">Swagger</span>
+    <!-- CHARACTER SHEET -->
+    <div class="zone" id="about" style="background: radial-gradient(ellipse at 50% 50%, #1a1a35 0%, var(--bg) 70%);">
+      <div class="zone-title-bar">📜 CHARACTER SHEET</div>
+      <div class="char-sheet">
+        <div class="char-portrait">
+          <div class="portrait-frame">🧙‍♂️</div>
+          <div class="char-class-badge">FULL STACK<br>DEVELOPER</div>
+          <div class="char-level-badge">LVL 12</div>
+        </div>
+
+        <div class="char-stats">
+          <div>
+            <div class="char-name-big">KURT XIERICK BAUTISTA</div>
+            <div class="char-bio">
+              A passionate developer on a mission to craft powerful, meaningful digital experiences. With a love for clean code and creative problem-solving, this hero combines technical mastery with relentless curiosity.
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-name">CREATIVITY</span>
+            <div class="stat-dots">
+              <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+              <div class="dot filled"></div><div class="dot filled"></div>
+            </div>
+            <span class="stat-value">MAX</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-name">PROBLEM SOLVING</span>
+            <div class="stat-dots">
+              <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+              <div class="dot filled"></div><div class="dot filled"></div>
+            </div>
+            <span class="stat-value">MAX</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-name">TEAMWORK</span>
+            <div class="stat-dots">
+              <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+              <div class="dot filled"></div><div class="dot"></div>
+            </div>
+            <span class="stat-value">90</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-name">SPEED</span>
+            <div class="stat-dots">
+              <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+              <div class="dot filled"></div><div class="dot"></div>
+            </div>
+            <span class="stat-value">88</span>
+          </div>
+
+          <div class="stat-row">
+            <span class="stat-name">ENDURANCE</span>
+            <div class="stat-dots">
+              <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+              <div class="dot filled"></div><div class="dot filled"></div>
+            </div>
+            <span class="stat-value">MAX</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="quest-item">
-      <div class="quest-header">
-        <span class="quest-status side">★ SIDE QUEST</span>
-        <span class="quest-name">QUEST: THE COMPONENT LIBRARY</span>
-        <span class="quest-reward">+250 XP 💰</span>
-      </div>
-      <div class="quest-body">
-        <div class="quest-desc">Crafted a reusable arsenal of UI components with consistent design runes, accessibility magic, and a Storybook of spells for fellow developers.</div>
-        <div class="quest-tags">
-          <span class="q-tag">React</span>
-          <span class="q-tag">Storybook</span>
-          <span class="q-tag">CSS</span>
-          <span class="q-tag">a11y</span>
+    <!-- SKILL TREE -->
+    <div class="zone" id="skills" style="background: radial-gradient(ellipse at 30% 50%, #1a0d35 0%, var(--bg) 60%);">
+      <div class="zone-title-bar">⚔️ SKILL TREE</div>
+      <div class="skill-tree">
+        <div class="tree-title">✦ UNLOCKED ABILITIES ✦</div>
+        <div class="skill-branches">
+
+          <div class="skill-branch">
+            <span class="branch-icon">⚡</span>
+            <div class="branch-name">FRONTEND</div>
+            <div class="skill-list">
+              <div class="skill-item">JavaScript</div>
+              <div class="skill-item">React.js</div>
+              <div class="skill-item">HTML & CSS</div>
+              <div class="skill-item">Tailwind CSS</div>
+              <div class="skill-item locked">Three.js</div>
+            </div>
+          </div>
+
+          <div class="skill-branch">
+            <span class="branch-icon">🛡️</span>
+            <div class="branch-name">BACKEND</div>
+            <div class="skill-list">
+              <div class="skill-item">Node.js</div>
+              <div class="skill-item">Express.js</div>
+              <div class="skill-item">REST APIs</div>
+              <div class="skill-item locked">GraphQL</div>
+              <div class="skill-item locked">gRPC</div>
+            </div>
+          </div>
+
+          <div class="skill-branch">
+            <span class="branch-icon">🗄️</span>
+            <div class="branch-name">DATABASE</div>
+            <div class="skill-list">
+              <div class="skill-item">PostgreSQL</div>
+              <div class="skill-item">MongoDB</div>
+              <div class="skill-item">MySQL</div>
+              <div class="skill-item locked">Redis</div>
+              <div class="skill-item locked">Cassandra</div>
+            </div>
+          </div>
+
+          <div class="skill-branch">
+            <span class="branch-icon">🔧</span>
+            <div class="branch-name">DEVOPS</div>
+            <div class="skill-list">
+              <div class="skill-item">Git & GitHub</div>
+              <div class="skill-item">Docker</div>
+              <div class="skill-item">TypeScript</div>
+              <div class="skill-item locked">Kubernetes</div>
+              <div class="skill-item locked">AWS</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- QUEST LOG -->
+    <div class="zone" id="projects" style="background: radial-gradient(ellipse at 70% 50%, #1a1a0d 0%, var(--bg) 60%);">
+      <div class="zone-title-bar">📋 QUEST LOG</div>
+      <div class="quest-log">
+        <div class="quest-log-header">
+          <span>COMPLETED & ACTIVE QUESTS</span>
+          <span class="quest-count">3 QUESTS</span>
+        </div>
 
-<!-- INN / CONTACT -->
-<div class="zone" id="contact" style="background: radial-gradient(ellipse at 50% 80%, #1a0d0d 0%, var(--bg) 60%);">
-  <div class="zone-title-bar">🏨 THE DEVELOPER'S INN</div>
-  <div class="inn-scene">
-    <div class="inn-sign">🏨 KURT'S INN<br>& TAVERN 🍺</div>
+        <div class="quest-item">
+          <div class="quest-header">
+            <span class="quest-status complete">✓ COMPLETE</span>
+            <span class="quest-name">QUEST: THE WEB APP</span>
+            <span class="quest-reward">+500 XP 💰</span>
+          </div>
+          <div class="quest-body">
+            <div class="quest-desc">Built a full-stack web application with user authentication, real-time data updates, and a clean intuitive interface. Defeated the Null Pointer Dragon and survived the CSS Dungeon.</div>
+            <div class="quest-tags">
+              <span class="q-tag">React</span>
+              <span class="q-tag">Node.js</span>
+              <span class="q-tag">PostgreSQL</span>
+              <span class="q-tag">JWT Auth</span>
+            </div>
+          </div>
+        </div>
 
-    <div class="innkeeper-box">
-      <div class="innkeeper-text">
-        Ah, a weary traveler! Welcome to the inn. Our hero
-        <span style="color:var(--accent)">Kurt</span> is always open
-        to new adventures, collaborations, and opportunities.
-        Whether you need a skilled developer or just want to share a tale —
-        send a raven, and he shall respond!
+        <div class="quest-item">
+          <div class="quest-header">
+            <span class="quest-status active">⚡ ACTIVE</span>
+            <span class="quest-name">QUEST: THE API FORGE</span>
+            <span class="quest-reward">+350 XP 💰</span>
+          </div>
+          <div class="quest-body">
+            <div class="quest-desc">Forging a powerful REST API connecting multiple realms (services). Focused on performance, security enchantments, and a legendary tome of documentation.</div>
+            <div class="quest-tags">
+              <span class="q-tag">Express</span>
+              <span class="q-tag">TypeScript</span>
+              <span class="q-tag">REST API</span>
+              <span class="q-tag">Swagger</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="quest-item">
+          <div class="quest-header">
+            <span class="quest-status side">★ SIDE QUEST</span>
+            <span class="quest-name">QUEST: THE COMPONENT LIBRARY</span>
+            <span class="quest-reward">+250 XP 💰</span>
+          </div>
+          <div class="quest-body">
+            <div class="quest-desc">Crafted a reusable arsenal of UI components with consistent design runes, accessibility magic, and a Storybook of spells for fellow developers.</div>
+            <div class="quest-tags">
+              <span class="q-tag">React</span>
+              <span class="q-tag">Storybook</span>
+              <span class="q-tag">CSS</span>
+              <span class="q-tag">a11y</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <div class="contact-options">
-      <a href="mailto:kurt@example.com" class="contact-opt">
-        <div class="contact-opt-icon">📧</div>
-        <div class="contact-opt-label">SEND RAVEN</div>
-        <div class="contact-opt-sub">kurt@example.com</div>
-      </a>
-      <a href="#" class="contact-opt">
-        <div class="contact-opt-icon">⚔️</div>
-        <div class="contact-opt-label">GITHUB</div>
-        <div class="contact-opt-sub">View my arsenal</div>
-      </a>
-      <a href="#" class="contact-opt">
-        <div class="contact-opt-icon">🗺️</div>
-        <div class="contact-opt-label">LINKEDIN</div>
-        <div class="contact-opt-sub">Join the guild</div>
-      </a>
+    <!-- INN / CONTACT -->
+    <div class="zone" id="contact" style="background: radial-gradient(ellipse at 50% 80%, #1a0d0d 0%, var(--bg) 60%);">
+      <div class="zone-title-bar">🏨 THE DEVELOPER'S INN</div>
+      <div class="inn-scene">
+        <div class="inn-sign">🏨 KURT'S INN<br>& TAVERN 🍺</div>
+
+        <div class="innkeeper-box">
+          <div class="innkeeper-text">
+            Ah, a weary traveler! Welcome to the inn. Our hero
+            <span style="color:var(--accent)">Kurt</span> is always open
+            to new adventures, collaborations, and opportunities.
+            Whether you need a skilled developer or just want to share a tale —
+            send a raven, and he shall respond!
+          </div>
+        </div>
+
+        <div class="contact-options">
+          <a href="mailto:kurt@example.com" class="contact-opt">
+            <div class="contact-opt-icon">📧</div>
+            <div class="contact-opt-label">SEND RAVEN</div>
+            <div class="contact-opt-sub">kurt@example.com</div>
+          </a>
+          <a href="#" class="contact-opt">
+            <div class="contact-opt-icon">⚔️</div>
+            <div class="contact-opt-label">GITHUB</div>
+            <div class="contact-opt-sub">View my arsenal</div>
+          </a>
+          <a href="#" class="contact-opt">
+            <div class="contact-opt-icon">🗺️</div>
+            <div class="contact-opt-label">LINKEDIN</div>
+            <div class="contact-opt-sub">Join the guild</div>
+          </a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="game-footer">
-  © 2026 KURT XIERICK BAUTISTA — ALL RIGHTS RESERVED — SAVE POINT REACHED ✦
-</div>
-```
-
+    <div class="game-footer">
+      © 2026 KURT XIERICK BAUTISTA — ALL RIGHTS RESERVED — SAVE POINT REACHED ✦
+    </div>
   </div>
 </div>
 
 <!-- Toast notification -->
-
 <div class="toast" id="toast">
   <span class="toast-icon">🏆</span>
   <div>ACHIEVEMENT UNLOCKED!</div>
@@ -1183,6 +1170,5 @@ transform: translateY(0);
     });
   });
 </script>
-
 </body>
 </html>
